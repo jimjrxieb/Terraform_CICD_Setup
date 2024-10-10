@@ -11,6 +11,8 @@ data "aws_ami" "ubuntu" {
   }
 }
 
+######################################## Monitoring ########################################
+
 resource "aws_instance" "prometheus_instance" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
@@ -36,6 +38,8 @@ resource "aws_instance" "prometheus_instance" {
     }
   }
 }
+
+######################################## SONARQUBE ########################################
 
 resource "aws_instance" "sonarqube_instance" {
   ami                    = data.aws_ami.ubuntu.id
@@ -63,6 +67,8 @@ resource "aws_instance" "sonarqube_instance" {
   }
 }
 
+######################################## NEXUS ########################################
+
 resource "aws_instance" "nexus_instance" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
@@ -89,10 +95,102 @@ resource "aws_instance" "nexus_instance" {
   }
 }
 
+######################################## JENKINS ########################################
+
+resource "aws_instance" "jenkins_instance" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  vpc_security_group_ids = var.vpc_security_group_ids
+  tags                   = merge(var.tags, { Name = "Jenkins" })
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update -y",
+      "sudo apt-get install -y docker.io",
+      "sudo systemctl start docker",
+      "sudo systemctl enable docker",
+      "sudo docker run -d --name Jenkins -p 8080:8080 linksrobot/my-jenkins:v3.0"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file(var.private_key_path)
+      host        = self.public_ip
+    }
+  }
+}
+
+######################################## ANSIBLE ########################################
+
+resource "aws_instance" "ansible_instance" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  vpc_security_group_ids = var.vpc_security_group_ids
+  tags                   = merge(var.tags, { Name = "Ansible" })
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo su",
+      "apt update && apt upgrade -y",
+      "apt install ansible -y",
+      "apt-add-repository ppa:ansible/ansible -y",
+      "apt update && apt upgrade -y"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file(var.private_key_path)
+      host        = self.public_ip
+    }
+  }
+}
+
+######################################## TERRAFORM ########################################
+
+resource "aws_instance" "terraform_instance" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  vpc_security_group_ids = var.vpc_security_group_ids
+  tags                   = merge(var.tags, { Name = "Terraform" })
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt update",
+      "# Install Terraform",
+      "sudo snap install terraform --classic -y",
+      "sudo apt update",
+      "sudo snap install kubectl --classic -y",
+      "sudo apt update",
+      "# Install AWS CLI",
+      "curl \"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\" -o \"awscliv2.zip\"",
+      "unzip awscliv2.zip",
+      "sudo ./aws/install -y",
+      "sudo apt update && sudo apt upgrade -y"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file(var.private_key_path)
+      host        = self.public_ip
+    }
+  }
+}
+
+######################################## OUTPUT ######################################## 
+
 output "instance_ips" {
   value = {
     sonarqube  = "${aws_instance.sonarqube_instance.public_ip}:9000"
     nexus      = "${aws_instance.nexus_instance.public_ip}:8081"
     prometheus = "${aws_instance.prometheus_instance.public_ip}:9090"
+    jenkins    = "${aws_instance.jenkins_instance.public_ip}:8080"
+    ansible    = "${aws_instance.ansible_instance.public_ip}:22"
+    terraform  = "${aws_instance.terraform_instance.public_ip}:22"
   }
 }
