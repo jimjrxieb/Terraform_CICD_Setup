@@ -14,7 +14,7 @@ data "aws_ami" "ubuntu" {
 ################################## TERRAFORM SETUP FOR EKS CLUSTER ############################
 resource "aws_instance" "terraform_instance" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
+  instance_type          = "t2.large"
   key_name               = var.key_name
   vpc_security_group_ids = var.vpc_security_group_ids
   tags                   = merge(var.tags, { Name = "Terraform" })
