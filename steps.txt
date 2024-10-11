@@ -1,0 +1,137 @@
+# These are my steps need to create each EC2 instances from scratch for my End to End CI/CD pipeline using jenkins. 
+# Nexus , SonarQube and Jenkins server  
+
+################################ JENKINS ################################
+
+Instance Type: t2.large
+Port: 8080
+Update package list:
+sudo apt update
+
+Install Docker:
+sudo apt install docker.io -y
+
+Update and upgrade packages:
+sudo apt update && sudo apt upgrade -y
+
+Run custom Jenkins image:
+sudo docker run -d --name Jenkins -p 8080:8080 linksrobot/my-jenkins:v3.0
+
+Check if Docker, Maven, Trivy, OWASP, and kubectl are installed:
+docker exec -it <container ID> /bin/bash
+docker --version
+kubectl version --client
+mvn --version
+trivy --version
+snyk --version
+
+Get initial Jenkins admin password:
+sudo docker exec linksrobot/my-jenkins:v3.0 cat /var/jenkins_home/secrets/initialAdminPassword
+
+################################ SONARQUBE ################################
+
+Instance Type: t2.medium
+Configure Server
+1. sudo apt update
+2. Install Docker:
+sudo apt install docker.io -y
+sudo apt update
+
+3. Run SonarQube Docker image:
+sudo docker run -d --name SonarQube -p 9000:9000 sonarqube:lts-community
+
+Configure Website
+1. Access SonarQube:
+    Open your browser and go to http://<elastic IP>:9000
+    User: admin
+    Password: admin
+2. Create Token:
+    Navigate to Admin > Security > Users > global > token
+3. Generate a token and copy it
+    Save the token locally as sonar-token
+
+SonarQube Server Installation on Jenkins
+1. Add SonarQube Server:
+Go to Manage Jenkins > Configure System
+Scroll down to the SonarQube servers section and click Add SonarQube
+Enter the following details:
+    Name: sonar-server
+    Server URL: http://<instance_public_ip>:9000
+    Server authentication token: sonar-token
+
+################################ NEXUS ################################
+
+Instance Type: t2.medium
+Configure Server
+1. Install Docker:
+sudo apt install docker.io -y
+sudo apt update
+
+2. Run Nexus Docker image:
+sudo docker run -d --name nexus -p 8081:8081 sonatype/nexus3
+
+
+SSH into server on MobaxTerm
+1. Enter the Nexus container:
+sudo docker exec -it <container ID> /bin/bash
+
+2. Once inside the container > Navigate to the Nexus directory:
+cd sonatype-work/nexus3
+
+3. Retrieve the admin password:
+cat admin.password
+
+Configure Application
+1. Access Nexus: >>Open your browser and go to http://<instance_public_ip>:8081
+Credentials for login:
+    User: admin
+    Password: (output from the previous command)
+2. Add to pom.xml in your application being used for pipeline:
+XML
+
+<distributionManagement>
+    <repository>
+        <id>maven-releases</id>
+        <url>(maven-release copyURL)</url>
+    </repository>
+    <snapshotRepository>
+        <id>maven-snapshots</id>
+        <url>(maven-snapshots copyURL)</url>
+    </snapshotRepository>
+</distributionManagement>
+
+Jenkins Configuration
+1. Managed Files:
+    Go to Manage Jenkins > Managed files.
+    Click on Add a new Config.
+    Select Global Maven settings.
+    Set the ID to maven-settings.
+2. Add the following XML configuration:
+XML
+
+<settings>
+  <servers>
+    <server>
+      <id>maven-releases</id>
+      <username>admin</username>
+      <password>(nexuspass)</password>
+    </server>
+    <server>
+      <id>maven-snapshots</id>
+      <username>admin</username>
+      <password>(nexuspass)</password>
+    </server>
+  </servers>
+</settings>
+
+Deployment Policy:
+    Ensure the deployment policy is set to allow redeploy.
+Summary of Steps:
+1. Managed Files:
+    Add a new configuration for Global Maven settings.
+    Set the ID to maven-settings.
+2. Server Configuration:
+    Add the server details for maven-releases and maven-snapshots with the appropriate credentials.
+3. Deployment Policy:
+    Set the deployment policy to allow redeploy to enable redeployment of artifacts.
+
