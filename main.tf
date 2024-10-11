@@ -149,39 +149,6 @@ resource "aws_instance" "ansible_instance" {
   }
 }
 
-######################################## TERRAFORM ########################################
-
-resource "aws_instance" "terraform_instance" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
-  key_name               = var.key_name
-  vpc_security_group_ids = var.vpc_security_group_ids
-  tags                   = merge(var.tags, { Name = "Terraform" })
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt update",
-      "# Install Terraform",
-      "sudo snap install terraform --classic -y",
-      "sudo apt update",
-      "sudo snap install kubectl --classic -y",
-      "sudo apt update",
-      "# Install AWS CLI",
-      "curl \"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\" -o \"awscliv2.zip\"",
-      "unzip awscliv2.zip",
-      "sudo ./aws/install -y",
-      "sudo apt update && sudo apt upgrade -y"
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = var.ssh_user
-      private_key = file(var.private_key_path)
-      host        = self.public_ip
-    }
-  }
-}
-
 ######################################## OUTPUT ######################################## 
 
 output "instance_ips" {
@@ -191,6 +158,5 @@ output "instance_ips" {
     prometheus = "${aws_instance.prometheus_instance.public_ip}:9090"
     jenkins    = "${aws_instance.jenkins_instance.public_ip}:8080"
     ansible    = "${aws_instance.ansible_instance.public_ip}:22"
-    terraform  = "${aws_instance.terraform_instance.public_ip}:22"
   }
 }
