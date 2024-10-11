@@ -165,11 +165,10 @@ resource "aws_instance" "ansible_instance" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo su",
-      "apt update && apt upgrade -y",
-      "apt install ansible -y",
-      "apt-add-repository ppa:ansible/ansible -y",
-      "apt update && apt upgrade -y"
+      "sudo apt update && apt upgrade -y",
+      "sudo apt install ansible -y",
+      "sudo apt-add-repository ppa:ansible/ansible -y",
+      "sudo apt update"
     ]
 
     connection {
