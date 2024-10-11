@@ -1,0 +1,113 @@
+## These are the steps needed from scratch to install Terraform with K8 cluster and Ansible server
+
+Install Terraform, kubectl, and AWS CLI
+1. Update package list:
+sudo apt update
+
+2. Install Terraform:
+sudo snap install terraform --classic -y
+
+3. Update package list again:
+sudo apt update
+
+4. Install kubectl:
+sudo snap install kubectl --classic -y
+
+4. Update package list once more:
+sudo apt update
+
+5. Install AWS CLI:
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+unzip awscliv2.zip
+sudo ./aws/install -y
+
+6. Perform a final update and upgrade:
+sudo apt update && sudo apt upgrade -y
+
+# Provide AWS Credentials
+7. Configure AWS CLI:
+aws configure
+    Access Key ID: (enter your access key)
+    Secret Access Key: (enter your secret key)
+    Default region name: us-east-1
+    Default output format: (press Enter)
+8. Clone Repository with EKS Cluster
+Clone the repository:
+git clone https://github.com/jimjrxieb/DevSecOps-EKS-Cluster.git
+
+9. Navigate to the repository directory:
+cd <repository_directory>
+
+Edit Terraform files:
+Open main.tf:
+vi main.tf > copy & paste 
+
+Open output.tf:
+vi output.tf > copy & paste
+
+Open variables.tf:
+vi variables.tf > copy & paste
+
+########################################## ANSIBLE ##########################################
+
+Install and Configure Ansible
+1. Switch to root user and update and upgrade:
+sudo su
+apt update && apt upgrade -y
+
+2. Install Ansible:
+apt install ansible -y
+#Verify Ansible installation:
+ansible --version
+
+3. Add Ansible PPA repository and Update and upgrade packages again:
+apt-add-repository ppa:ansible/ansible -y
+apt update && apt upgrade -y
+
+# Generate SSH Keys for connection from scratch
+4a. Generate SSH keys:
+ssh-keygen -t rsa -b 4096
+    add generated public key to authorized_keys on target VMs 
+
+## Alternatively If VMs have authorized_keys, grab the corresponding private key and create a PEM file:
+
+Create key with corresponding private key
+4b. ssh-keygen -m PEM -t rsa -b 4096 -f ~/.ssh/id_rsa.pem -or- nano ~/.ssh/id_rsa.pem
+
+Configure Ansible with SSH Keys
+
+5. Give permission to the private key:
+    chmod 600 /root/.ssh/<corresponding private key>
+
+Set the private key file path in ansible.cfg:
+6. Open ansible.cfg:
+vi /etc/ansible/ansible.cfg
+    Add the following under [defaults]:
+        [defaults]
+        host_key_checking = False
+        private_key_file = /root/.ssh/id_rsa
+
+Path to Get Keys
+  Navigate to the SSH directory: cd /root/.ssh > ls
+( You should see files like authorized_keys, id_ed25519, id_ed25519.pub or authorized_keys, id_rsa, id_rsa.pub. or created .pem)
+
+Path to Playbook 
+7. Create a directory for the controller:
+    cd /home/ubuntu
+      mkdir controller > cd into controller > create playbook.yml > vi playbook.yml > configure
+
+Path to VMs
+8. Open and Edit the hosts file:
+    vi /etc/ansible/hosts
+        Add the VM details:
+        [VM]
+        <server name> ansible_host=<target IP> ansible_user=ubuntu
+
+9. Open and Edit the Ansible configuration file:
+Location
+/etc/ansible/ansible.cfg
+    vi ansible.cfg
+        Add the following under [defaults]:
+        [defaults]
+        host_key_checking = False
+        private_key_file = /root/.ssh/id_rsa
