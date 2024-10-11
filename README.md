@@ -17,7 +17,7 @@ Configuration and steps needed to build a custom DevSecOps Jenkins pipeline.
     - *EXTRASTEPS.TXT*: Steps to create a VM with Terraform, AWS CLI, and Kubectl, from scratch.
     - Ansible server provisioning details.
 
-2. **Pipeline Flow (may vary on Projects needs)**
+2. **Security focused Pipeline Flow (may vary on Projects needs)**
    1. **Git Checkout**: Begin by checking out the code from your repository.
    2. **Maven Build and Test**: Compile the code and run unit tests using Maven.
    3. **OWASP Dependency Check**: Perform a security analysis of project dependencies with OWASP.
