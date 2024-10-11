@@ -9,25 +9,15 @@ Configuration and steps needed to build a custom DevSecOps Jenkins pipeline.
 - An AWS EC2 VM running the Official Sonarqube container
 - An AWS EC2 VM running the Official Nexus container
 - An AWS EC2 VM running the Official Prometheus container
+- An AWS EC2 VM running Terraform server for EKS clusters
 
-## Prerequisites
-Ensure the following tools and plugins are installed:
-- Docker
-- Jenkins
-- Terraform
-- AWS CLI
-- Kubectl
-- Snyk
-- OWASP Dependency Check
-- Trivy Container Scanner
-- Splunk 
 
 ## Setup Instructions
 1. **Terraform Main Setup**: Located in `main.tf`.
     - *EXTRASTEPS.TXT*: Steps to create a VM with Terraform, AWS CLI, and Kubectl, from scratch.
     - Ansible server provisioning details.
 
-2. **Pipeline Flow**
+2. **Pipeline Flow (may vary on Projects needs)**
    1. **Git Checkout**: Begin by checking out the code from your repository.
    2. **Maven Build and Test**: Compile the code and run unit tests using Maven.
    3. **OWASP Dependency Check**: Perform a security analysis of project dependencies with OWASP.
@@ -40,6 +30,7 @@ Ensure the following tools and plugins are installed:
    9. **Prometheus and Grafana**: 
        - Set up Prometheus for monitoring your application.
        - Create Grafana dashboards to visualize metrics.
+    
 
 ## Notes
 - For detailed steps on Terraform and Ansible setup, refer to `EXTRASTEPS.TXT`.
