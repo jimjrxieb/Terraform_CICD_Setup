@@ -252,5 +252,8 @@ output "instance_ips" {
     #jenkins    = "${aws_instance.jenkins_instance.public_ip}:8080"
     #ansible    = "${aws_instance.ansible_instance.public_ip}:22"
     terraform  = "${aws_instance.terraform_instance.public_ip}:22"
+    k8s_master = "${aws_instance.k8s_master.public_ip}"
+    k8s_worker_1 = "${aws_instance.k8s_worker[0].public_ip}"
+    k8s_worker_2 = "${aws_instance.k8s_worker[1].public_ip}"
   }
 }
