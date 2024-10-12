@@ -21,17 +21,15 @@ resource "aws_instance" "terraform_instance" {
 
   provisioner "remote-exec" {
     inline = [
-      "sudo apt update",
-      "# Install Terraform",
+      "sudo apt-get update -y",
       "sudo snap install terraform --classic -y",
-      "sudo apt update",
+      "sudo apt-get update",
       "sudo snap install kubectl --classic -y",
-      "sudo apt update",
-      "# Install AWS CLI",
+      "sudo apt-get update",
       "curl \"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\" -o \"awscliv2.zip\"",
       "unzip awscliv2.zip",
       "sudo ./aws/install -y",
-      "sudo apt update && sudo apt upgrade -y"
+      "sudo apt-get update -y"
     ]
 
     connection {
@@ -128,7 +126,7 @@ resource "aws_instance" "nexus_instance" {
 }
 
 ######################################## JENKINS ########################################
-
+/*
 resource "aws_instance" "jenkins_instance" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
@@ -179,7 +177,7 @@ resource "aws_instance" "ansible_instance" {
     }
   }
 }
-
+*/
 ######################################## OUTPUT ######################################## 
 
 output "instance_ips" {
@@ -187,8 +185,8 @@ output "instance_ips" {
     sonarqube  = "${aws_instance.sonarqube_instance.public_ip}:9000"
     nexus      = "${aws_instance.nexus_instance.public_ip}:8081"
     prometheus = "${aws_instance.prometheus_instance.public_ip}:9090"
-    jenkins    = "${aws_instance.jenkins_instance.public_ip}:8080"
-    ansible    = "${aws_instance.ansible_instance.public_ip}:22"
+    #jenkins    = "${aws_instance.jenkins_instance.public_ip}:8080"
+    #ansible    = "${aws_instance.ansible_instance.public_ip}:22"
     terraform  = "${aws_instance.terraform_instance.public_ip}:22"
   }
 }
