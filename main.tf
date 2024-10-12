@@ -22,9 +22,9 @@ resource "aws_instance" "terraform_instance" {
   provisioner "remote-exec" {
     inline = [
       "sudo apt-get update -y",
-      "sudo snap install terraform --classic -y",
+      "sudo snap install terraform --classic",
       "sudo apt-get update",
-      "sudo snap install kubectl --classic -y",
+      "sudo snap install kubectl --classic",
       "sudo apt-get update",
       "curl \"https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip\" -o \"awscliv2.zip\"",
       "unzip awscliv2.zip",
