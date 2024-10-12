@@ -5,26 +5,29 @@ Install Terraform, kubectl, and AWS CLI
 sudo apt update
 
 2. Install Terraform:
-sudo snap install terraform --classic -y
+sudo snap install terraform --classic 
 
 3. Update package list again:
 sudo apt update
 
 4. Install kubectl:
-sudo snap install kubectl --classic -y
+sudo snap install kubectl --classic 
 
 4. Update package list once more:
 sudo apt update
 
 5. Install AWS CLI:
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install -y
+sudo apt install awscli
+sudo apt install unzip
+
+    unzip awscliv2.zip
+    sudo ./aws/install 
+
 
 6. Perform a final update and upgrade:
 sudo apt update && sudo apt upgrade -y
 
-# Provide AWS Credentials
+##### Manually Provide AWS Credentials #####
 7. Configure AWS CLI:
 aws configure
     Access Key ID: (enter your access key)

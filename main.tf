@@ -27,6 +27,7 @@ resource "aws_instance" "terraform_instance" {
       "sudo snap install kubectl --classic",
       "sudo apt-get update",
       "sudo apt  install awscli -y",
+      "sudo apt install unzip",
       "sudo apt-get update -y"
     ]
 
