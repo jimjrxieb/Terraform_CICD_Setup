@@ -144,7 +144,8 @@ resource "aws_instance" "k8s_master" {
       "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg",
       "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list",
       "sudo apt update -y",
-      "sudo apt install -y kubeadm kubelet kubectl"
+      "sudo apt install -y kubeadm kubelet kubectl",
+      "sudo kubeadm init --pod-network-cidr=10.244.0.0/16"
     ]
 
     connection {

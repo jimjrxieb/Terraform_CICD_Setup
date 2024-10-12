@@ -164,6 +164,10 @@ Summary of Steps:
 7. Initialize Kubernetes Master Node [On MasterNode]
     sudo kubeadm init --pod-network-cidr=10.244.0.0/16
 
+# Manually ssh into server
+
+
+
 8. Configure Kubernetes Cluster [On MasterNode]
     mkdir -p $HOME/.kube
     sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
