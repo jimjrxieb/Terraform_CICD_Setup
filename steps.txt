@@ -161,10 +161,11 @@ Summary of Steps:
 6. Install Kubernetes Components[On Master & Worker Node]
     sudo apt install -y kubeadm=1.28.1-1.1 kubelet=1.28.1-1.1 kubectl=1.28.1-1.1
 
+# Manually ssh into all 3 servers
+
+
 7. Initialize Kubernetes Master Node [On MasterNode]
     sudo kubeadm init --pod-network-cidr=10.244.0.0/16
-
-# Manually ssh into server
 
 
 
