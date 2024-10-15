@@ -1,6 +1,6 @@
 variable "region" {
   description = "The AWS region to deploy to"
-  default     = "us-east-1"  # Change this to your desired region
+  default     = "us-east-2"  # Change this to your desired region
 }
 
 variable "vpc_cidr" {
@@ -16,5 +16,5 @@ variable "public_subnet_cidrs" {
 
 variable "cluster_name" {
   description = "The name of the EKS cluster"
-  default     = "DevSecOps"  # Change this if needed
+  default     = "aws_eks_cluster"  # Change this if needed
 }

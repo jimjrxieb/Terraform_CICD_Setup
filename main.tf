@@ -12,9 +12,10 @@ data "aws_ami" "ubuntu" {
 }
 /*
 ################################## TERRAFORM SETUP FOR EKS CLUSTER ############################
+
 resource "aws_instance" "terraform_instance" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
+  instance_type          = "t2.large"
   key_name               = var.key_name
   vpc_security_group_ids = var.vpc_security_group_ids
   tags                   = merge(var.tags, { Name = "Terraform" })
@@ -101,7 +102,7 @@ resource "aws_instance" "sonarqube_instance" {
 
 resource "aws_instance" "nexus_instance" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
+  instance_type          = "t2.large"
   key_name               = var.key_name
   vpc_security_group_ids = var.vpc_security_group_ids
   tags                   = merge(var.tags, { Name = "Nexus" })
@@ -125,8 +126,73 @@ resource "aws_instance" "nexus_instance" {
   }
 }
 
-######################################## JENKINS ########################################
+######################################## Kubernetes ########################################
 
+resource "aws_instance" "k8s_master" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  vpc_security_group_ids = var.vpc_security_group_ids
+  tags                   = merge(var.tags, { Name = "K8_Master" })
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update -y",
+      "sudo apt-get install -y docker.io",
+      "sudo chmod 666 /var/run/docker.sock",
+      "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg",
+      "sudo mkdir -p -m 755 /etc/apt/keyrings",
+      "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg",
+      "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list",
+      "sudo apt update -y",
+      "sudo apt install -y kubeadm kubelet kubectl",
+      "sudo kubeadm init --pod-network-cidr=10.244.0.0/16"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.private_key_path)
+      host        = self.public_ip
+    }
+  }
+}
+
+######################################## Kubernetes Slaves ########################################
+
+resource "aws_instance" "k8s_worker" {
+  count                  = 2
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = var.instance_type
+  key_name               = var.key_name
+  vpc_security_group_ids = var.vpc_security_group_ids
+  tags = merge(var.tags, { Name = "K8_Worker_${count.index + 1}" })
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update -y",
+      "sudo apt-get install -y docker.io",
+      "sudo chmod 666 /var/run/docker.sock",
+      "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg",
+      "sudo mkdir -p -m 755 /etc/apt/keyrings",
+      "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg",
+      "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list",
+      "sudo apt update -y",
+      "sudo apt install -y kubeadm kubelet kubectl"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = "ubuntu"
+      private_key = file(var.private_key_path)
+      host        = self.public_ip
+    }
+  }
+}
+
+
+######################################## JENKINS ########################################
+/*
 resource "aws_instance" "jenkins_instance" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
@@ -151,76 +217,6 @@ resource "aws_instance" "jenkins_instance" {
     }
   }
 }
-
-resource "aws_instance" "k8s_master" {
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
-  key_name               = var.key_name
-  vpc_security_group_ids = var.vpc_security_group_ids
-  tags                   = merge(var.tags, { Name = "K8s Master" })
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt-get update",
-      "sudo apt install docker.io -y",
-      "sudo chmod 666 /var/run/docker.sock",
-      "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg",
-      "sudo mkdir -p -m 755 /etc/apt/keyrings",
-      "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg",
-      "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list",
-      "sudo apt update",
-      "sudo apt install -y kubeadm kubelet kubectl",
-      "sudo systemctl start docker",
-      "sudo systemctl enable docker",
-      "sudo kubeadm init --pod-network-cidr=10.244.0.0/16",
-      "mkdir -p $HOME/.kube",
-      "sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config",
-      "sudo chown $(id -u):$(id -g) $HOME/.kube/config",
-      "kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml"
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = var.ssh_user
-      private_key = file(var.private_key_path)
-      host        = self.public_ip
-    }
-  }
-}
-
-resource "aws_instance" "k8s_worker" {
-  count                  = 2
-  ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
-  key_name               = var.key_name
-  vpc_security_group_ids = var.vpc_security_group_ids
-  tags                   = merge(var.tags, { Name = "K8s Worker ${count.index + 1}" })
-
-  provisioner "remote-exec" {
-    inline = [
-      "sudo apt-get update",
-      "sudo apt install docker.io -y",
-      "sudo chmod 666 /var/run/docker.sock",
-      "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg",
-      "sudo mkdir -p -m 755 /etc/apt/keyrings",
-      "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg",
-      "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list",
-      "sudo apt update",
-      "sudo apt install -y kubeadm kubelet kubectl",
-      "sudo systemctl start docker",
-      "sudo systemctl enable docker",
-      "sudo kubeadm join ${aws_instance.k8s_master.public_ip}:6443 --token <token> --discovery-token-ca-cert-hash sha256:<hash>"
-    ]
-
-    connection {
-      type        = "ssh"
-      user        = var.ssh_user
-      private_key = file(var.private_key_path)
-      host        = self.public_ip
-    }
-  }
-}
-
 
 ######################################## ANSIBLE ########################################
 /*
