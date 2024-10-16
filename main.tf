@@ -83,6 +83,7 @@ resource "aws_instance" "sonarqube_instance" {
     inline = [
       "sudo apt-get update -y",
       "sudo apt-get install -y docker.io",
+      "sudo chmod 666 /var/run/docker.sock",
       "sudo apt-get update -y",
       "sudo systemctl start docker",
       "sudo systemctl enable docker",
@@ -99,10 +100,10 @@ resource "aws_instance" "sonarqube_instance" {
 }
 
 ######################################## NEXUS ########################################
-
+/*
 resource "aws_instance" "nexus_instance" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = "t2.large"
+  instance_type          = var.instance_type
   key_name               = var.key_name
   vpc_security_group_ids = var.vpc_security_group_ids
   tags                   = merge(var.tags, { Name = "Nexus" })
@@ -111,6 +112,7 @@ resource "aws_instance" "nexus_instance" {
     inline = [
       "sudo apt-get update -y",
       "sudo apt-get install -y docker.io",
+      "sudo chmod 666 /var/run/docker.sock",
       "sudo apt-get update -y",
       "sudo systemctl start docker",
       "sudo systemctl enable docker",
@@ -125,7 +127,7 @@ resource "aws_instance" "nexus_instance" {
     }
   }
 }
-
+*/
 ######################################## Kubernetes ########################################
 
 resource "aws_instance" "k8s_master" {
@@ -195,7 +197,7 @@ resource "aws_instance" "k8s_worker" {
 
 resource "aws_instance" "jenkins_instance" {
   ami                    = data.aws_ami.ubuntu.id
-  instance_type          = var.instance_type
+  instance_type          = "t2.large"
   key_name               = var.key_name
   vpc_security_group_ids = var.vpc_security_group_ids
   tags                   = merge(var.tags, { Name = "Jenkins" })
@@ -204,9 +206,10 @@ resource "aws_instance" "jenkins_instance" {
     inline = [
       "sudo apt-get update -y",
       "sudo apt-get install -y docker.io",
+      "sudo chmod 666 /var/run/docker.sock",
       "sudo systemctl start docker",
-      "sudo systemctl enable docker",
-      "sudo docker run -d --name Jenkins -p 8080:8080 linksrobot/my-jenkins:v3.0"
+      "sudo systemctl enable docker"     
+      
     ]
 
     connection {
@@ -249,7 +252,7 @@ resource "aws_instance" "ansible_instance" {
 output "instance_ips" {
   value = {
     sonarqube  = "${aws_instance.sonarqube_instance.public_ip}:9000"
-    nexus      = "${aws_instance.nexus_instance.public_ip}:8081"
+    #nexus      = "${aws_instance.nexus_instance.public_ip}:8081"
     prometheus = "${aws_instance.prometheus_instance.public_ip}:9090"
     jenkins    = "${aws_instance.jenkins_instance.public_ip}:8080"
     k8s_master = "${aws_instance.k8s_master.public_ip}:6443"
