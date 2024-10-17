@@ -194,7 +194,7 @@ resource "aws_instance" "k8s_worker" {
 
 
 ######################################## JENKINS ########################################
-
+/*
 resource "aws_instance" "jenkins_instance" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = "t2.large"
@@ -222,7 +222,7 @@ resource "aws_instance" "jenkins_instance" {
 }
 
 ######################################## ANSIBLE ########################################
-/*
+
 resource "aws_instance" "ansible_instance" {
   ami                    = data.aws_ami.ubuntu.id
   instance_type          = var.instance_type
@@ -254,7 +254,7 @@ output "instance_ips" {
     sonarqube  = "${aws_instance.sonarqube_instance.public_ip}:9000"
     #nexus      = "${aws_instance.nexus_instance.public_ip}:8081"
     prometheus = "${aws_instance.prometheus_instance.public_ip}:9090"
-    jenkins    = "${aws_instance.jenkins_instance.public_ip}:8080"
+    #jenkins    = "${aws_instance.jenkins_instance.public_ip}:8080"
     k8s_master = "${aws_instance.k8s_master.public_ip}:6443"
     k8s_worker_1 = "${aws_instance.k8s_worker[0].public_ip}"
     k8s_worker_2 = "${aws_instance.k8s_worker[1].public_ip}"
