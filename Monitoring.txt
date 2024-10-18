@@ -1,0 +1,63 @@
+# This my Prometheus with Grafana dashboard and Blackbox Exporter
+
+t2.large
+sudo apt update
+1. ### Install Prometheus
+    > wget https://github.com/prometheus/prometheus/releases/download/v3.0.0-beta.1/prometheus-3.0.0-beta.1.linux-amd64.tar.gz
+unzip tar file:>> tar -xvf prometheus-3.0.0-beta.1.linux-amd64.tar.gz 
+    << rm -rf prometheus-3.0.0-beta.1.linux-amd64.tar.gz 
+    >> cd prometheus-3.0.0-beta.1.linux-amd64 
+    >>> run program in background:[ ./Prometheus & ]
+    
+    ACCESS <server IP>:9090
+2. cd ..
+
+3. ###Install Grafana
+    > sudo apt-get install -y adduser libfontconfig1 musl
+    >> wget https://dl.grafana.com/enterprise/release/grafana-enterprise_11.2.2+security~01_amd64.deb
+    >>> sudo dpkg -i grafana-enterprise_11.2.2+security~01_amd64.deb
+    >>>> sudo /bin/systemctl start grafana-server
+    ACCESS <server IP>:3000 
+        * on app* user: admin
+	              pass: admin
+4. ###Install Blackbox
+    > wget https://github.com/prometheus/blackbox_exporter/releases/download/v0.25.0/blackbox_exporter-0.25.0.linux-amd64.tar.gz
+    >> tar -xvf blackbox_exporter-0.25.0.linux-amd64.tar.gz
+  <<< rm -rf blackbox_exporter-0.25.0.linux-amd64.tar.gz
+    >>> cd blackbox_exporter-0.25.0.linux-amd64 
+    >>>> run in background: [ ./blackbox_exporter &]
+    ACCESS <server IP>:9115
+
+5. cd ..
+
+6. ** CONFIGURATION **
+    > cd prometheus-3.0.0-beta.1.linux-amd64
+    >> [vi prometheus.yml] 
+>>> copy and paste []
+--[
+  - job_name: 'blackbox'
+    metrics_path: /probe
+    params:
+      module: [http_2xx]  # Look for a HTTP 200 response.
+    static_configs:
+      - targets:
+        - http://prometheus.io    # Target to probe with http.
+        - https://<application-ip>:[k8-port]   # Target to probe with https
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: __param_target
+      - source_labels: [__param_target]
+        target_label: instance
+      - target_label: __address__
+        replacement: <blackbox-IP>:9115  # The blackbox exporter's real hostname:port.
+  ]--
+  ** ADJUST ACCORDINGLY **
+# Restart Prometheus
+    > pgrep Prometheus
+    << kill [p #]
+    >>[start again] ./prometheus &
+
+# Add data source into Grafana
+> connections > data source > click on [add data source] > Prometheus > URL of Prometheus > save
+>> import dashboard > web search Grafana dashboard blackbox > get ID [7587]> data source prometheus
+ 

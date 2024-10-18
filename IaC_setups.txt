@@ -1,5 +1,6 @@
 ## These are the steps needed from scratch to install Terraform with K8 cluster and Ansible server
 
+############################################# Terraform with EKS ########################################
 Install Terraform, kubectl, and AWS CLI
 1. Update package list:
 sudo apt update
@@ -41,15 +42,22 @@ git clone https://github.com/jimjrxieb/DevSecOps-EKS-Cluster.git
 9. Navigate to the repository directory:
 cd <repository_directory>
 
-Edit Terraform files:
+Edit Terraform files:[found in ekscluster folder]
 Open main.tf:
-vi main.tf > copy & paste 
+vi main.tf > copy & paste [main-tf.txt]
 
 Open output.tf:
-vi output.tf > copy & paste
+vi output.tf > copy & paste [outputs-tf.txt]
 
 Open variables.tf:
-vi variables.tf > copy & paste
+vi variables.tf > copy & paste [variables-tf.txt]
+
+> terraform init
+> add env Credentials
+> terraform validate
+> terraform plan
+> terraform apply -auto-approve
+< terraform destroy -auto-approve
 
 ########################################## ANSIBLE ##########################################
 
