@@ -54,11 +54,12 @@ resource "aws_instance" "prometheus_instance" {
   provisioner "remote-exec" {
     inline = [
       "sudo apt-get update -y",
-      "sudo apt-get install -y docker.io",
-      "sudo apt-get update -y",
-      "sudo systemctl start docker",
-      "sudo systemctl enable docker",
-      "sudo docker run -d --name prometheus -p 9090:9090 prom/prometheus"
+      "wget https://github.com/prometheus/prometheus/releases/download/v3.0.0-beta.1/prometheus-3.0.0-beta.1.linux-amd64.tar.gz",
+      "sudo apt-get install -y adduser libfontconfig1",
+      "wget https://dl.grafana.com/enterprise/release/grafana-enterprise_11.2.2+security~01_amd64.deb",
+      "sudo dpkg -i grafana-enterprise_11.2.2+security~01_amd64.deb",
+      "sudo /bin/systemctl start grafana-server",
+      "wget https://github.com/prometheus/blackbox_exporter/releases/download/v0.25.0/blackbox_exporter-0.25.0.linux-amd64.tar.gz"
     ]
 
     connection {
@@ -192,6 +193,39 @@ resource "aws_instance" "k8s_worker" {
   }
 }
 
+################################ Github Actions Runner ##################################
+
+resource "aws_instance" "runner_instance" {
+  ami                    = data.aws_ami.ubuntu.id
+  instance_type          = "t2.large"
+  key_name               = var.key_name
+  vpc_security_group_ids = var.vpc_security_group_ids
+  tags                   = merge(var.tags, { Name = "GH_runner" })
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo apt-get update -y",
+      "sudo apt-get install -y docker.io",
+      "sudo chmod 666 /var/run/docker.sock",
+      "sudo systemctl start docker",
+      "sudo systemctl enable docker",
+      "docker run -d --name SonarQube -p 9000:9000 sonarqube:lts-community",
+      "sudo apt install maven -y",
+      "sudo apt-get install wget apt-transport-https gnupg lsb-release",
+      "wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -",
+      "echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list",
+      "sudo apt-get update",
+      "sudo apt-get install trivy"
+    ]
+
+    connection {
+      type        = "ssh"
+      user        = var.ssh_user
+      private_key = file(var.private_key_path)
+      host        = self.public_ip
+    }
+  }
+}
 
 ######################################## JENKINS ########################################
 /*
