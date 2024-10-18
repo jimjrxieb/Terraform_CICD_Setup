@@ -1,0 +1,156 @@
+# Kubernetes setup and configuration
+
+
+    [On Workernodes]
+    sudo su * MUST BE ROOT USER *
+    kubeadm join <>:6443 --token <>  --discovery-token-ca-cert-hash <>
+
+    # if ports already used: sudo kubeadm reset > y
+
+
+    [On Masternode]
+    {{ In Master Node Server }}
+1. Create Service account: 
+>>>[vi svc.yaml]
+>>>[ apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: git-actions-svc
+  namespace: webapps ]
+2. Create namespace: 
+> kubectl create ns <webapps> 
+>> kubectl apply -f svc.yaml
+
+3. Create Role: 
+>>>[vi role.yaml] 
+>>>[apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-role
+  namespace: webapps
+rules:
+  - apiGroups:
+        - ""
+        - apps
+        - autoscaling
+        - batch
+        - extensions
+        - policy
+        - rbac.authorization.k8s.io
+    resources:
+      - pods
+      - secrets
+      - componentstatuses
+      - configmaps
+      - daemonsets
+      - deployments
+      - events
+      - endpoints
+      - horizontalpodautoscalers
+      - ingress
+      - jobs
+      - limitranges
+      - namespaces
+      - nodes
+      - pods
+      - persistentvolumes
+      - persistentvolumeclaims
+      - resourcequotas
+      - replicasets
+      - replicationcontrollers
+      - serviceaccounts
+      - services
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+] 
+>>> kubectl apply -f role.yaml
+
+4. Assign role to service account: 
+>>>[vi bind.yaml] 
+>>>[apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-rolebinding
+  namespace: webapps 
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: app-role 
+subjects:
+- namespace: webapps 
+  kind: ServiceAccount
+  name: git-actions-svc 
+]
+>>> kubectl apply -f bind.yaml
+
+5. Create Kube token for Jenkins: 
+>>>[vi sec.yaml]
+>>>[apiVersion: v1
+kind: Secret
+type: kubernetes.io/service-account-token
+metadata:
+  name: git-action-svc or jenkins
+  annotations:
+    kubernetes.io/service-account.name: (git-actions-svc)-or-(jenkins) ] 
+>>> kubectl apply -f sec.yaml -n webapps
+    
+    #To get token: kubectl describe secret mysecretname -n webapps
+    token:<>
+    
+    # git action token:> base64 ~/.kube/config
+
+
+6. Grab Kube server endpoint
+     cd ~/.kube > ls > cat config
+    grab server location: https://172.31.83.64:6443
+    grab cluster name: Kubernetes
+    grab namespace: webapps
+7. Create "deployment-service.yaml" on application running through pipeline > copy and adjust []
+
+[apiVersion: apps/v1
+kind: Deployment # Kubernetes resource kind we are creating
+metadata:
+  name: boardgame-deployment # change accordingly
+spec:
+  selector:
+    matchLabels:
+      app: boardgame # change accordingly 
+  replicas: 2 # Number of replicas that will be created for this deployment
+  template:
+    metadata:
+      labels:
+        app: boardgame # change accordingly
+    spec:
+      containers:
+        - name: boardgame
+          image: linksrobot/dso_boardgame:latest # Image that will be used to containers in the cluster
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080 # The port that the container is running on in the cluster
+
+---
+            
+apiVersion: v1 # Kubernetes API version
+kind: Service # Kubernetes resource kind we are creating
+metadata: # Metadata of the resource kind we are creating
+  name: boardgame-ssvc
+spec:
+  selector:
+    app: boardgame # change accordingly
+  ports:
+    - protocol: "TCP"
+      port: 80
+      targetPort: 8080 
+  type: LoadBalancer # type of the service.  ]
+
+8. Check App on kube
+    #Go to CONSOLE OUTPUT:
+    # looks similiar to this 
++ kubectl get svc -n webapps
+NAME             TYPE           CLUSTER-IP    EXTERNAL-IP   PORT(S)        AGE
+boardgame-ssvc   LoadBalancer   10.98.49.44   <pending>     80:30529/TCP   2m41s
+
+grab worker ip:44.201.240.36
+grab kube port(s):30529
+search: 44.201.240.36:30529
+
+
