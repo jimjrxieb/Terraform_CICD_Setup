@@ -41,7 +41,7 @@ resource "aws_instance" "terraform_instance" {
     }
   }
 }
-*/
+
 ######################################## Monitoring ########################################
 
 resource "aws_instance" "prometheus_instance" {
@@ -70,6 +70,7 @@ resource "aws_instance" "prometheus_instance" {
     }
   }
 }
+
 
 ######################################## SONARQUBE ########################################
 
@@ -148,8 +149,7 @@ resource "aws_instance" "k8s_master" {
       "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg",
       "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list",
       "sudo apt update -y",
-      "sudo apt install -y kubeadm kubelet kubectl",
-      "sudo kubeadm init --pod-network-cidr=10.244.0.0/16"
+      "sudo apt install -y kubeadm kubelet kubectl" 
     ]
 
     connection {
@@ -175,13 +175,8 @@ resource "aws_instance" "k8s_worker" {
     inline = [
       "sudo apt-get update -y",
       "sudo apt-get install -y docker.io",
-      "sudo chmod 666 /var/run/docker.sock",
-      "sudo apt-get install -y apt-transport-https ca-certificates curl gnupg",
-      "sudo mkdir -p -m 755 /etc/apt/keyrings",
-      "curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg",
-      "echo 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /' | sudo tee /etc/apt/sources.list.d/kubernetes.list",
-      "sudo apt update -y",
-      "sudo apt install -y kubeadm kubelet kubectl"
+      "sudo chmod 666 /var/run/docker.sock"
+
     ]
 
     connection {
@@ -210,12 +205,7 @@ resource "aws_instance" "runner_instance" {
       "sudo systemctl start docker",
       "sudo systemctl enable docker",
       "docker run -d --name SonarQube -p 9000:9000 sonarqube:lts-community",
-      "sudo apt install maven -y",
-      "sudo apt-get install wget apt-transport-https gnupg lsb-release",
-      "wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -",
-      "echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list",
-      "sudo apt-get update",
-      "sudo apt-get install trivy"
+      "sudo apt-get install maven -y"
     ]
 
     connection {
@@ -285,15 +275,16 @@ resource "aws_instance" "ansible_instance" {
 
 output "instance_ips" {
   value = {
-    sonarqube  = "${aws_instance.sonarqube_instance.public_ip}:9000"
+    #sonarqube  = "${aws_instance.sonarqube_instance.public_ip}:9000"
     #nexus      = "${aws_instance.nexus_instance.public_ip}:8081"
-    prometheus = "${aws_instance.prometheus_instance.public_ip}:9090"
+    #prometheus = "${aws_instance.prometheus_instance.public_ip}:9090"
     #jenkins    = "${aws_instance.jenkins_instance.public_ip}:8080"
     k8s_master = "${aws_instance.k8s_master.public_ip}:6443"
     k8s_worker_1 = "${aws_instance.k8s_worker[0].public_ip}"
     k8s_worker_2 = "${aws_instance.k8s_worker[1].public_ip}"
     #ansible    = "${aws_instance.ansible_instance.public_ip}:22"
     #terraform  = "${aws_instance.terraform_instance.public_ip}:22"
+    runner       = "${aws_instance.runner_instance.public_ip}"
   }
 }
 
