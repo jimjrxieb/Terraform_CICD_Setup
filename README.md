@@ -33,7 +33,7 @@ Configuration and steps needed to build a custom CI/CD DevSecOps Jenkins pipelin
    1. **Git Checkout**: Begin by checking out the code from your repository for Jenkin or Run off Github push COMMIT.
    2. **Maven Build and Test**: Compile the code and run unit tests using Maven.
    3. **OWASP Dependency Check**: Perform a security analysis of project dependencies with OWASP.
-   4. **Snyk Check**: Conduct additional security checks using Snyk.
+   4. **GitGuardian Check**: Conduct additional secret and security checks using GitGuardian.
    5. **SonarQube Check**: Analyze the code quality using SonarQube.
    6. **Trivy Container Check**: Perform a security scan of container images using Trivy.
    7. **Docker Build and Push**: Build the Docker image and push it to your container registry.
